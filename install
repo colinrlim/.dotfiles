@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Define colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Dotfiles directory
+DOTFILES="$HOME/.dotfiles"
+
+# Config directory
+CONFIG="$HOME/.config"
+
+# Function to create symbolic link
+create_link() {
+    local source="$1"
+    local target="$2"
+    
+    # Check if the source exists
+    if [ ! -e "$source" ]; then
+        echo -e "${RED}Warning: Source $source does not exist${NC}"
+        return 1
+    fi
+    
+    # Create parent directory if it doesn't exist
+    mkdir -p "$(dirname "$target")"
+    
+    # Create symbolic link
+    ln -sf "$source" "$target"
+    echo -e "${GREEN}Created symlink: $target -> $source${NC}"
+}
+
+# Make sure .dotfiles directory exists
+mkdir -p "$DOTFILES"
+
+# Create config directories if they don't exist
+mkdir -p "$CONFIG"
+
+# Array of configurations to link
+declare -A configs=(
+    ["bashrc"]="$DOTFILES/.bashrc:$HOME/.bashrc"
+    ["waybar"]="$DOTFILES/waybar:$CONFIG/waybar"
+    ["neofetch"]="$DOTFILES/neofetch:$CONFIG/neofetch"
+    ["hypr"]="$DOTFILES/hypr:$CONFIG/hypr"
+    ["kitty"]="$DOTFILES/kitty:$CONFIG/kitty"
+    ["nautilus"]="$DOTFILES/nautilus:$CONFIG/nautilus"
+)
+
+# Create symbolic links for each config
+echo "Creating symbolic links..."
+for config in "${!configs[@]}"; do
+    IFS=':' read -r source target <<< "${configs[$config]}"
+    echo -e "${YELLOW}Setting up $config${NC}"
+    create_link "$source" "$target"
+done
+
+echo -e "\n${GREEN}Dotfiles setup complete!${NC}"
